@@ -60,7 +60,7 @@ except sqlite3.Error as e:
 
 # Sidebar Navigation
 investment_type = st.sidebar.selectbox("Select Investment Type", [
-    "Portfolio Overview", "Stocks", "Crypto", "Startups", "Private Placements", "Sharia Contracts", "Real Estate", "Venture Capital", "Brick & Mortar", "FX", "Mudarabah"
+    "Portfolio Overview", "Stocks", "Crypto", "Startups", "Private Placements", "Brick & Mortar", "FX", "Mudarabah"
 ])
 
 # Function to fetch stock data
@@ -215,25 +215,37 @@ if investment_type == "Crypto":
     display_portfolio_overview("Crypto")
 
 # Manual Input for Other Investments
-if investment_type in ["Startups", "Private Placements", "Sharia Contracts", "Real Estate"]:
-    investment_name = st.sidebar.text_input("Investment Name")
+if investment_type == "Private Placements":
+    company = st.sidebar.text_input("Company")
+    industry = st.sidebar.text_input("Industry (i.e. subsector)")
+    revenue = st.sidebar.number_input("Revenue (MRQ) ($)", min_value=0.0, step=100.0)
+    valuation = st.sidebar.number_input("Valuation ($)", min_value=0.0, step=100.0)
     investment_amount = st.sidebar.number_input("Investment Amount ($)", min_value=0.0, step=100.0)
+    fund_raise = st.sidebar.number_input("Fund Raise ($)", min_value=0.0, step=100.0)   
+    ownership = st.sidebar.number_input("Ownership (%)", min_value=0.0, max_value=100.0, step=0.1)
+    date_invested = st.sidebar.date_input("Date Invested")
+    platform = st.sidebar.text_input("Platform")
+    repayment = st.sidebar.text_input("Repayment")
+    frequency = st.sidebar.text_input("Frequency")
+    total_return = st.sidebar.number_input("Total Return ($)", min_value=0.0, step=100.0)
     expected_return = st.sidebar.number_input("Expected Return (%)", min_value=0.0, max_value=100.0, step=0.1)
-    
+    exit_date = st.sidebar.date_input("Exit Date")
+   
     if st.sidebar.button("Add Investment"):
-        if investment_name and investment_amount > 0:
+        if company and investment_amount > 0:
+            additional_info = f"Industry: {industry}, Revenue: {revenue}, Valuation: {valuation}, ownership: {ownership}, date_invested: {date_invested}, platform: {platform}, repayment: {repayment}, frequency: {frequency}, total_return: {total_return}, exit_date: {exit_date}"            
             try:
-                c.execute("INSERT INTO portfolio (Type, Ticker, AmountInvested, CurrentValue) VALUES (?, ?, ?, ?)",
-                          (investment_type, investment_name, investment_amount, investment_amount * (1 + expected_return / 100)))
+                c.execute("INSERT INTO portfolio (Type, Ticker, AmountInvested, CurrentValue, AdditionalInfo) VALUES (?, ?, ?, ?, ?)",
+                          ("Private Placements", company, revenue, valuation, additional_info))
                 conn.commit()
-                st.sidebar.success(f"Added {investment_name} investment successfully!")
+                st.sidebar.success(f"Added {company} investment successfully!")
             except sqlite3.Error as e:
-                st.error(f"Failed to add investment: {e}")
+                st.error(f"Failed to add private placement investment: {e}")
     
-    display_portfolio_overview(investment_type)
+    display_portfolio_overview("Private Placements")
 
-# Venture Capital Section
-if investment_type == "Venture Capital":
+# Startups Section
+if investment_type == "Startups":
     pitch_date = st.sidebar.date_input("Pitch Date")
     company = st.sidebar.text_input("Company")
     industry = st.sidebar.text_input("Industry (i.e. subsector)")
@@ -250,18 +262,18 @@ if investment_type == "Venture Capital":
     method = st.sidebar.text_input("Method")
     exit_date = st.sidebar.date_input("Exit Date")
 
-    if st.sidebar.button("Add Venture Capital Investment"):
+    if st.sidebar.button("Add Startups Investment"):
         if company and amount_invested > 0:
-            additional_info = f"Pitch Date: {pitch_date}, Founders: {founders}, Website: {website}, Email: {email}, Fund Raise: {fund_raise}, Pitch Summary: {pitch_summary}, Views: {views}, Valuation: {valuation}, Ownership: {ownership}, Date Invested: {date_invested}, Method: {method}, Exit Date: {exit_date}"
+            additional_info = f"Industry: {industry}, Revenue: {revenue}, Valuation: {valuation}, website: {website}, email: {email}, fund_raise: {fund_raise}, pitch_summary: {pitch_summary}"
             try:
                 c.execute("INSERT INTO portfolio (Type, Ticker, AmountInvested, CurrentValue, AdditionalInfo) VALUES (?, ?, ?, ?, ?)",
-                          ("Venture Capital", company, amount_invested, amount_invested, additional_info))
+                          ("Startups", company, revenue, valuation, additional_info))
                 conn.commit()
                 st.sidebar.success(f"Added {company} investment successfully!")
             except sqlite3.Error as e:
-                st.error(f"Failed to add venture capital investment: {e}")
+                st.error(f"Failed to add brick & mortar investment: {e}")
     
-    display_portfolio_overview("Venture Capital")
+    display_portfolio_overview("Startups")
 
 # Brick & Mortar Section
 if investment_type == "Brick & Mortar":
