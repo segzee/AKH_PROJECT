@@ -1,0 +1,8 @@
+{
+    "editor.experimental.asyncTokenizationVerification": true,
+    "editor.experimental.asyncTokenizationLogging": true,
+    "editor.experimental.preferTreeSitter.ini": true,
+    "editor.experimentalEditContextEnabled": true,
+    "editor.experimental.treeSitterTelemetry": true,
+    "editor.experimental.preferTreeSitter.typescript": true
+}
