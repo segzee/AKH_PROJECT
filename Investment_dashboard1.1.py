@@ -554,6 +554,43 @@ with st.expander("Close Investment Position"):
     if st.button("Close Investment"):
         delete_investment(investment_option, int(entry_id))
 
+# Add new function for editable investment tables
+def display_editable_table(table_name: str) -> None:
+    """Display an editable table and handle updates."""
+    try:
+        cursor.execute(f"SELECT * FROM {table_name}")
+        data = cursor.fetchall()
+        if not data:
+            st.info(f"No data available in {table_name} table.")
+            return
+            
+        # Create DataFrame with column names
+        columns = [desc[0] for desc in cursor.description]
+        df = pd.DataFrame(data, columns=columns)
+        
+        # Create editable table
+        edited_df = st.data_editor(df, num_rows="dynamic", key=f"editor_{table_name}")
+        
+        # Add save button
+        if st.button(f"Save Changes to {table_name}"):
+            for index, row in edited_df.iterrows():
+                # Get original row for comparison
+                original_row = df.iloc[index] if index < len(df) else None
+                
+                if original_row is not None and not row.equals(original_row):
+                    # Update existing row
+                    set_clause = ", ".join([f"{col} = ?" for col in columns[1:]])  # Skip ID column
+                    values = [row[col] for col in columns[1:]]  # Values without ID
+                    values.append(row['id'])  # Add ID for WHERE clause
+                    
+                    query = f"UPDATE {table_name} SET {set_clause} WHERE id = ?"
+                    cursor.execute(query, values)
+            
+            conn.commit()
+            st.success(f"Changes saved to {table_name} successfully!")
+    except Exception as e:
+        st.error(f"Error updating {table_name}: {e}")
+
 # Stocks Section
 if investment_type == "Stocks":
     # Add button and form for adding new stock entries
@@ -753,7 +790,7 @@ if investment_type == "Private Placements":
         success_message="Private placement added successfully!"
     )
     
-    display_table_data("private_placements")
+    display_editable_table("private_placements")
     
     # Generate Plotly visualization for private placements
     cursor.execute("SELECT Company, Valuation FROM private_placements")
@@ -805,7 +842,7 @@ if investment_type == "Startups":
         success_message="Startup investment added successfully!"
     )
     
-    display_table_data("startups")
+    display_editable_table("startups")
     
     # Generate Plotly visualization for startups
     cursor.execute("SELECT Company, FundRaise FROM startups")
@@ -851,7 +888,7 @@ if investment_type == "Brick & Mortar":
         success_message="Brick & Mortar investment added successfully!"
     )
     
-    display_table_data("brick_and_mortar")
+    display_editable_table("brick_and_mortar")
     
     # Generate Plotly visualization for brick and mortar
     cursor.execute("SELECT Company, Revenue FROM brick_and_mortar")
@@ -895,7 +932,7 @@ if investment_type == "FX":
         success_message="FX investment added successfully!"
     )
     
-    display_table_data("fx")
+    display_editable_table("fx")
     
     # Generate Plotly visualization for FX
     cursor.execute("SELECT Currency, ExchangeRate FROM fx")
@@ -944,7 +981,7 @@ if investment_type == "Mudarabah":
         success_message="Mudarabah investment added successfully!"
     )
     
-    display_table_data("mudarabah")
+    display_editable_table("mudarabah")
     
     # Generate Plotly visualization for mudarabah
     cursor.execute("SELECT Company, TotalReturn FROM mudarabah")
