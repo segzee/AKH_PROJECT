@@ -8,6 +8,7 @@ import sqlite3
 import os
 import time  # Import time module to add a delay if needed
 from PIL import Image # Add this import
+import requests  # Add this import
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -23,18 +24,38 @@ try:
     try:
         from urllib.request import urlopen
         from io import BytesIO
-        response = urlopen(github_url)
-        img = Image.open(BytesIO(response.read()))
-        st.image(img, width=200, caption="Let Invest")
+        response = requests.get(github_url)
+        if response.status_code == 200:
+            img = Image.open(BytesIO(response.content))
+            st.image(img, width=200, caption="Let Invest")
+        else:
+            raise Exception(f"Failed to fetch image from GitHub: {response.status_code}")
     except Exception as url_error:
-        # Fallback to local file if GitHub fails
-        image_path = r"c:\Users\Segun\Desktop\AkH Projects\download.png"
-        img = Image.open(image_path)
-        st.image(img, width=200, caption="AkH Capital Logo")
-except FileNotFoundError:
-    st.warning(f"Image not found locally or on GitHub. Please check the image path or internet connection.")
+        # Fallback to various local paths
+        possible_paths = [
+            r"c:\Users\Segun\Desktop\AkH Projects\download.png",
+            r"c:\Users\Segun\Desktop\download.png",
+            "download.png"  # Try current directory
+        ]
+        
+        image_loaded = False
+        for path in possible_paths:
+            try:
+                img = Image.open(path)
+                st.image(img, width=200, caption="AkH Capital Logo")
+                image_loaded = True
+                break
+            except FileNotFoundError:
+                continue
+                
+        if not image_loaded:
+            st.warning(
+                "Could not load logo image. Please ensure the image exists in one of these locations:\n" +
+                "\n".join(possible_paths) +
+                "\n\nOr check your internet connection to load from GitHub."
+            )
 except Exception as e:
-    st.error(f"Error loading image: {str(e)}")
+    st.error(f"Error loading image: {str(e)}\nPlease check if the image file is a valid image format.")
 
 # Function to recreate the database
 def recreate_database() -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
