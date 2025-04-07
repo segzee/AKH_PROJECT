@@ -18,12 +18,15 @@ st.title("📈 Multi-Asset Investment Dashboard")
 
 # Load and display the image
 try:
-    img = Image.open(r"c:\Users\Segun\Desktop\download.png")
-    st.image(img, width=200) # Adjust width as needed
+    image_path = r"c:\Users\Segun\Desktop\AkH Projects\download.png"
+    img = Image.open(image_path)
+    st.image(img, width=200,)  # Added caption for better context
 except FileNotFoundError:
-    st.error("Image file not found at c:\\Users\\Segun\\Desktop\\download.png")
+    st.warning(f"Image file not found. Please ensure the logo file exists at: {image_path}\n"
+              f"You may need to add the logo file 'download.png' to the project directory.")
 except Exception as e:
-    st.error(f"Error loading image: {e}")
+    st.error(f"Error loading image: {str(e)}\n"
+             f"Please check if the image file is a valid image format.")
 
 # Function to recreate the database
 def recreate_database() -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
