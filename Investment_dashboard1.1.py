@@ -7,6 +7,7 @@ import plotly.express as px
 import sqlite3
 import os
 import time  # Import time module to add a delay if needed
+from PIL import Image # Add this import
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -14,6 +15,15 @@ logger = logging.getLogger(__name__)
 
 st.set_page_config(page_title="Investment Dashboard", layout="wide")
 st.title("📈 Multi-Asset Investment Dashboard")
+
+# Load and display the image
+try:
+    img = Image.open(r"c:\Users\Segun\Desktop\download.png")
+    st.image(img, width=200) # Adjust width as needed
+except FileNotFoundError:
+    st.error("Image file not found at c:\\Users\\Segun\\Desktop\\download.png")
+except Exception as e:
+    st.error(f"Error loading image: {e}")
 
 # Function to recreate the database
 def recreate_database() -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
