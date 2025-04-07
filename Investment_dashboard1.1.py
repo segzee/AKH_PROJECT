@@ -18,15 +18,23 @@ st.title("📈 Multi-Asset Investment Dashboard")
 
 # Load and display the image
 try:
-    image_path = r"c:\Users\Segun\Desktop\AkH Projects\download.png"
-    img = Image.open(image_path)
-    st.image(img, width=200,)  # Added caption for better context
+    # Try loading from GitHub first
+    github_url = "https://raw.githubusercontent.com/segzee/AKH_PROJECT/master/download.png"
+    try:
+        from urllib.request import urlopen
+        from io import BytesIO
+        response = urlopen(github_url)
+        img = Image.open(BytesIO(response.read()))
+        st.image(img, width=200, caption="Let Invest")
+    except Exception as url_error:
+        # Fallback to local file if GitHub fails
+        image_path = r"c:\Users\Segun\Desktop\AkH Projects\download.png"
+        img = Image.open(image_path)
+        st.image(img, width=200, caption="AkH Capital Logo")
 except FileNotFoundError:
-    st.warning(f"Image file not found. Please ensure the logo file exists at: {image_path}\n"
-              f"You may need to add the logo file 'download.png' to the project directory.")
+    st.warning(f"Image not found locally or on GitHub. Please check the image path or internet connection.")
 except Exception as e:
-    st.error(f"Error loading image: {str(e)}\n"
-             f"Please check if the image file is a valid image format.")
+    st.error(f"Error loading image: {str(e)}")
 
 # Function to recreate the database
 def recreate_database() -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
