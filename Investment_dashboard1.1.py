@@ -27,7 +27,7 @@ try:
         response = requests.get(github_url)
         if response.status_code == 200:
             img = Image.open(BytesIO(response.content))
-            st.image(img, width=200, caption="Let Invest")
+            st.image(img, width=200, caption="Let AKH Capital Investment be your guide")
         else:
             raise Exception(f"Failed to fetch image from GitHub: {response.status_code}")
     except Exception as url_error:
@@ -632,6 +632,52 @@ def display_editable_table(table_name: str) -> None:
             st.success(f"Changes saved to {table_name} successfully!")
     except Exception as e:
         st.error(f"Error updating {table_name}: {e}")
+
+# NEW: Function to refresh EndDate and update current values for stocks and crypto
+def refresh_end_dates():
+    try:
+        current_date = pd.Timestamp.today().strftime("%Y-%m-%d")
+        # Update EndDate for stocks and crypto
+        cursor.execute("UPDATE stocks SET EndDate = ? WHERE EndDate <> ?", (current_date, current_date))
+        cursor.execute("UPDATE crypto SET EndDate = ? WHERE EndDate <> ?", (current_date, current_date))
+        conn.commit()
+        st.success(f"End dates updated to current date: {current_date}")
+        
+        # Optionally, update the current values based on the new end date
+        # For stocks:
+        cursor.execute("SELECT id, Ticker, AmountInvested, StartDate FROM stocks")
+        stocks = cursor.fetchall()
+        for row in stocks:
+            stock_id, ticker, amount, start_date = row
+            # Use current date for end_date
+            start_date_str = pd.to_datetime(start_date).strftime("%Y-%m-%d")
+            current_data = fetch_stock_data(ticker, start_date_str, current_date)
+            if not current_data.empty:
+                current_price = current_data["Close"].iloc[-1]
+                current_value = (amount * current_price / current_data["Close"].iloc[0]) if current_data["Close"].iloc[0] != 0 else 0
+                cursor.execute("UPDATE stocks SET CurrentPrice = ?, CurrentValue = ? WHERE id = ?",
+                               (current_price, current_value, stock_id))
+        # For crypto:
+        cursor.execute("SELECT id, Ticker, AmountInvested, StartDate FROM crypto")
+        cryptos = cursor.fetchall()
+        for row in cryptos:
+            crypto_id, ticker, amount, start_date = row
+            start_date_str = pd.to_datetime(start_date).strftime("%Y-%m-%d")
+            current_data = fetch_crypto_data(ticker, start_date_str, current_date)
+            if not current_data.empty:
+                current_price = current_data["Close"].iloc[-1]
+                initial_price = current_data["Close"].iloc[0]
+                current_value = (amount * current_price / initial_price) if initial_price != 0 else 0
+                cursor.execute("UPDATE crypto SET CurrentPrice = ?, CurrentValue = ? WHERE id = ?",
+                               (current_price, current_value, crypto_id))
+        conn.commit()
+        st.success("Current values updated based on refreshed End Dates.")
+    except Exception as e:
+        st.error(f"Error while refreshing end dates: {e}")
+
+# NEW: Add a refresh button in the sidebar so the user can refresh EndDate value
+if st.sidebar.button("Refresh End Date"):
+    refresh_end_dates()
 
 # Stocks Section
 if investment_type == "Stocks":
