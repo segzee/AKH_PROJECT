@@ -933,17 +933,17 @@ if investment_type == "Startups":
     display_editable_table("startups")
     
     # Generate Plotly visualization for startups
-    cursor.execute("SELECT Company, FundRaise FROM startups")
+    cursor.execute("SELECT Company, Valuation FROM startups")
     data = cursor.fetchall()
     if data:
-        df = pd.DataFrame(data, columns=["Company", "FundRaise"])
+        df = pd.DataFrame(data, columns=["Company", "Valuation"])
         generate_plotly_bar_chart(
             df,
             x_col="Company",
-            y_col="FundRaise",
-            title="Startups Fund Raise",
+            y_col="Valuation",
+            title="Startups Valuation",
             xlabel="Company",
-            ylabel="Fund Raise ($)"
+            ylabel="Valuation ($)"
         )
     
     # Add startups summary
